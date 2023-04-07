@@ -1,0 +1,347 @@
+import React from "react";
+import Comment from "../components/Comment";
+import Reply from "../components/Reply";
+import AddComment from "../components/AddComment";
+import "../style.css";
+import dataJSON from "../data.json";
+import { nanoid } from "nanoid";
+import EditComment from "../components/EditComment";
+export default function App() {
+  const [commentText, setCommentText] = React.useState("");
+  const [editText, setEditText] = React.useState("");
+  const [model, setModel] = React.useState(false);
+  const [data, setData] = React.useState(
+    JSON.parse(localStorage.getItem("data")) || dataJSON
+  );
+  const [addReply, setAddReply] = React.useState(false);
+  const [editComment, setEditComment] = React.useState(false);
+  const [removeComment, setRemoveComment] = React.useState(false);
+  const [deleteThis, setDeleteThis] = React.useState("");
+
+  localStorage.setItem("data", JSON.stringify(data));
+
+  function handleTextarea(e) {
+    setCommentText(e.target.value);
+  }
+
+  function handleDelete(e, state) {
+    if (removeComment === state) {
+      setDeleteThis(e);
+      setModel(true);
+    } else {
+      deleteComment(deleteThis);
+    }
+  }
+  function handleEdit(e) {
+    setEditComment((prevData) => !prevData);
+    setData((prevData) => {
+      return {
+        ...prevData,
+        comments: prevData.comments.map((comment) => {
+          return comment.id === e.id
+            ? { ...comment, edit: !editComment }
+            : {
+                ...comment,
+                replies: comment.replies.map((commentReply) => {
+                  return commentReply.id === e.id
+                    ? { ...commentReply, edit: !editComment }
+                    : commentReply;
+                }),
+              };
+        }),
+      };
+    });
+  }
+
+  function handleReply(e) {
+    setAddReply((prevData) => !prevData);
+    setData((prevData) => {
+      return {
+        ...prevData,
+        comments: prevData.comments.map((comment) => {
+          return comment.id === e.id
+            ? { ...comment, reply: !addReply }
+            : {
+                ...comment,
+                replies: comment.replies.map((commentReply) => {
+                  return commentReply.id === e.id
+                    ? { ...commentReply, reply: !addReply }
+                    : commentReply;
+                }),
+              };
+        }),
+      };
+    });
+  }
+
+  function addComment() {
+    const time = new Date();
+    const timestamp = time.toString();
+    console.log("time", time);
+    setData((prevData) => {
+      return {
+        ...prevData,
+        comments: [
+          ...prevData.comments,
+          {
+            id: nanoid(),
+            content: commentText,
+            createdAt: timestamp,
+            score: 0,
+            user: {
+              image: {
+                png: "./images/avatars/image-juliusomo.png",
+                webp: "./images/avatars/image-juliusomo.webp",
+              },
+              username: "juliusomo",
+            },
+            replies: [],
+          },
+        ],
+      };
+    });
+    setCommentText("");
+  }
+
+  function updateEdit(e, text) {
+    setData((prevData) => {
+      return {
+        ...prevData,
+        comments: prevData.comments.map((comment) => {
+          const editThis = comment.replies.filter((reply) => {
+            if (comment.id === e.id) {
+              return {
+                ...comment,
+                ...(comment.edit = false),
+                ...(comment.content = text),
+              };
+            } else if (reply.id === e.id) {
+              return {
+                ...comment,
+                ...(reply.edit = false),
+                ...(reply.content = text),
+              };
+            }
+          });
+          if (editThis.length > 1 === true) {
+            return comment;
+          } else {
+            return {
+              ...comment,
+              ...(comment.edit = false),
+              ...(comment.content = text),
+            };
+          }
+        }),
+      };
+    });
+    handleEdit(e);
+  }
+
+  function createReply(e) {
+    const time = new Date();
+    const timestamp = time.toString();
+    handleReply(e);
+    console.log("eeeeeeeeee", e);
+    setData((prevData) => {
+      return {
+        ...prevData,
+        comments: prevData.comments.map((comment) => {
+          return comment.id === e.id
+            ? {
+                ...comment,
+                ...(comment.reply = true),
+                ...comment.replies.push({
+                  id: nanoid(),
+                  content: commentText,
+                  createdAt: timestamp,
+                  score: 0,
+                  replyingTo: e.user.username,
+                  user: {
+                    image: {
+                      png: "./images/avatars/image-juliusomo.png",
+                      webp: "./images/avatars/image-juliusomo.webp",
+                    },
+                    username: "juliusomo",
+                  },
+                  replies: [],
+                }),
+              }
+            : comment;
+        }),
+      };
+    });
+    setAddReply(false);
+    setCommentText("");
+  }
+
+  function deleteComment(e) {
+
+    const filterComment = data.comments
+      .filter((item) => {
+        return item.id !== e.id;
+      })
+      .filter((i) => {
+        const replies = i.replies.filter((reply) => {
+          return reply.id !== e.id;
+        });
+        return (i.replies = replies);
+      });
+
+    setData((prevData) => {
+      return {
+        ...prevData,
+        comments: filterComment,
+      };
+    });
+    setModel(false);
+  }
+
+  const currentUserImg = data.currentUser.image.png;
+  const comments = data.comments.map((comment) => {
+    return (
+      <>
+        {!comment.edit && (
+          <Comment
+            id={comment.id}
+            counter={comment.score}
+            content={comment.content}
+            createdAt={comment.createdAt}
+            username={comment.user.username}
+            currentUser={comment.user.username === data.currentUser.username}
+            image={comment.user.image.png}
+            handleDelete={() => handleDelete(comment, false)}
+            handleEdit={() => handleEdit(comment)}
+            handleReply={() => handleReply(comment)}
+          />
+        )}
+        {comment.reply === true && (
+          <AddComment
+            textarea_placeholder={"Reply"}
+            handleTextarea={handleTextarea}
+            comment={""}
+            handleComment={() => createReply(comment)}
+            currentUser={currentUserImg}
+            sendButton={"Reply"}
+          />
+        )}
+        {comment.edit === true && (
+          <EditComment
+            counter={comment.score}
+            content={comment.content}
+            createdAt={comment.createdAt}
+            username={comment.user.username}
+            image={comment.user.image.png}
+            handleDelete={() => handleDelete(comment, false)}
+            handleEdit={() => handleEdit(comment)}
+            handleReply={() => handleReply(comment)}
+            updateEdit={(text) => updateEdit(comment, text)}
+            textarea_placeholder={"edit"}
+            textarea_value={comment.content}
+            handleTextarea={handleTextarea}
+            comment={editText}
+            handleComment={() => addComment()}
+            currentUser={currentUserImg}
+            sendButton={"Update"}
+          />
+        )}
+        {comment.replies.length >= 1 ? (
+          <>
+            {comment.replies.map((reply, index) => {
+              return (
+                <div key={index}>
+                  {!reply.edit && (
+                    <Reply
+                      id={reply.id}
+                      replyingTo={reply.replyingTo}
+                      counter={reply.score}
+                      content={reply.content}
+                      createdAt={reply.createdAt}
+                      username={reply.user.username}
+                      image={reply.user.image.png}
+                      currentUser={
+                        reply.user.username === data.currentUser.username
+                      }
+                      handleDelete={() => handleDelete(reply, false)}
+                      handleEdit={() => handleEdit(reply)}
+                      handleReply={() => handleReply(reply)}
+                    />
+                  )}
+                  {reply.reply === true && (
+                    <AddComment
+                      textarea_placeholder={"Reply"}
+                      handleTextarea={handleTextarea}
+                      comment={commentText}
+                      handleComment={() => createReply(reply)}
+                      currentUser={currentUserImg}
+                      sendButton={"Reply"}
+                    />
+                  )}
+                  {reply.edit === true && (
+                    <EditComment
+                      counter={reply.score}
+                      content={reply.content}
+                      createdAt={reply.createdAt}
+                      username={reply.user.username}
+                      image={reply.user.image.png}
+                      handleDelete={() => handleDelete(reply, false)}
+                      handleEdit={() => handleEdit(reply)}
+                      handleReply={() => handleReply(reply)}
+                      updateEdit={(text) => updateEdit(reply, text)}
+                      textarea_placeholder={"edit"}
+                      textarea_value={reply.content}
+                      handleTextarea={handleTextarea}
+                      comment={editText}
+                      handleComment={() => addComment()}
+                      currentUser={currentUserImg}
+                      sendButton={"Update"}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </>
+        ) : (
+          ""
+        )}
+      </>
+    );
+  });
+
+  return (
+    <div className="app">
+      {comments}
+      {model && (
+        <div className="model-div">
+          <dialog open={model} id="model">
+            <h2>Delete comment</h2>
+            <p>
+              Are you sure you want to delete this comment? This will remove the
+              comment and can't be undone.
+            </p>
+            <div className="flex">
+              <button className="no-delete" onClick={() => setModel(false)}>
+                No, cancel
+              </button>
+              <button
+                className="yes-delete"
+                onClick={() => handleDelete("", true)}
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </dialog>
+        </div>
+      )}
+      <AddComment
+        textarea_placeholder={"Add a comment.."}
+        handleTextarea={handleTextarea}
+        comment={""}
+        textarea_value={commentText}
+        handleComment={() => addComment()}
+        currentUser={currentUserImg}
+        sendButton={"Send"}
+      />
+    </div>
+  );
+}

@@ -3,10 +3,13 @@
   "version": "0.1.0",
   "description": "",
   "license": "MIT",
+  "homepage": "https://sangy987.github.io/interactive-comments-section-main",
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "preview": "npm run build && vite preview"
+    "preview": "npm run build && vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "nanoid": "^3.3.1",
@@ -15,6 +18,7 @@
   },
   "devDependencies": {
     "babel-preset-nano-react-app": "^0.1.0",
+    "gh-pages": "^5.0.0",
     "vite": "^2.8.6"
   },
   "babel": {

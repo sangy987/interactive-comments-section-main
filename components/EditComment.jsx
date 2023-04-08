@@ -3,6 +3,36 @@ import React from 'react'
 function EditComment(props) {
   const [score, setScore] = React.useState(props.counter)
   const [editText, setEditText] = React.useState(props.textarea_value)
+  const [time, setTime] = React.useState(getTimeElapsed(props.createdAt));
+
+  function getTimeElapsed(t) {
+    if (t.split(" ").length === 3) {
+      return t;
+    } else {
+      const timestamp = Date.parse(t);
+      const secondsElapsed = Math.floor((Date.now() - timestamp) / 1000);
+
+      if (secondsElapsed < 60) {
+        return `${secondsElapsed} seconds ago`;
+      } else if (secondsElapsed < 3600) {
+        const minutes = Math.floor(secondsElapsed / 60);
+        return `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`;
+      } else if (secondsElapsed < 86400) {
+        const hours = Math.floor(secondsElapsed / 3600);
+        return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+      } else if (secondsElapsed < 604800) {
+        const days = Math.floor(secondsElapsed / 86400);
+        return `${days} ${days === 1 ? "day" : "days"} ago`;
+      } else if (econdsElapsed >= 604800 && econdsElapsed < 31536000) {
+        const months = Math.floor(secondsElapsed / 604800);
+        return `${months} ${months === 1 ? "week" : "weeks"} ago`;
+      } else {
+        const years = Math.floor(secondsElapsed / 31536000);
+        return `${years} ${years === 1 ? "year" : "years"} ago`;
+      }
+    }
+  }
+
   function increaseScore() {
     if (score > props.counter) {
       return "";
@@ -50,7 +80,7 @@ function EditComment(props) {
           <img className='user-logo' src={props.image} />
           <p className='user-name'>{props.username}</p>
           {props.currentUser && <p className='you-card'>you</p>}
-          <p className='comment-date'>{props.createdAt}</p>
+          <p className='comment-date'>{time}</p>
           {props.currentUser ? (
             <div className='comment-edit hide'>
               <span onClick={props.handleDelete}>

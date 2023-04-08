@@ -19,9 +19,15 @@ export default function Comment(props) {
       } else if (secondsElapsed < 86400) {
         const hours = Math.floor(secondsElapsed / 3600);
         return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
-      } else {
+      } else if (secondsElapsed < 604800) {
         const days = Math.floor(secondsElapsed / 86400);
         return `${days} ${days === 1 ? "day" : "days"} ago`;
+      } else if (econdsElapsed >= 604800 && econdsElapsed < 31536000) {
+        const months = Math.floor(secondsElapsed / 604800);
+        return `${months} ${months === 1 ? "week" : "weeks"} ago`;
+      } else {
+        const years = Math.floor(secondsElapsed / 31536000);
+        return `${years} ${years === 1 ? "year" : "years"} ago`;
       }
     }
   }

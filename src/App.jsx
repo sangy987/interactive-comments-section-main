@@ -77,7 +77,6 @@ export default function App() {
   function addComment() {
     const time = new Date();
     const timestamp = time.toString();
-    console.log("time", time);
     setData((prevData) => {
       return {
         ...prevData,
@@ -142,7 +141,6 @@ export default function App() {
     const time = new Date();
     const timestamp = time.toString();
     handleReply(e);
-    console.log("eeeeeeeeee", e);
     setData((prevData) => {
       return {
         ...prevData,
